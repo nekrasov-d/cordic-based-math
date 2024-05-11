@@ -259,6 +259,7 @@ Run:
 Results example (with model run results on the background):
 N = DW = AW = 18 (360 deg), nsamples = 2 full periods
 
+![image:](https://raw.githubusercontent.com/nekrasov-d/cordic-based-math/main/tb/sincos/results.png)
 
 ### Square root ###
 
