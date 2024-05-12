@@ -28,6 +28,8 @@
 
 import numpy as np
 
+# Cordic fixed coefficient K. It's precision depends on steps amount (K), but
+# scale depends on data range
 def calculate_k( N, KW ):
     K = 1.0
     for i in range(N):
