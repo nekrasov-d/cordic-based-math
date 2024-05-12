@@ -25,6 +25,17 @@ Contents:
       mistakes embedding our IP-cores. Here I focus on the second way, but try
       to make it so that the optimization for redundant checks would be easy
       keeping arithmetic atomized in clear expressions.
+   3. It seems pointless to make cordic steps amount N more than quadrant angle
+      (angle_i input, AW parameter) bit width. Optimal solution is N = AW.
+   4. Fixed cordic coefficient K could be used if you need some gain/attenuation
+      in your system that is relarively close to one, or attenuation that is not
+      a power of two times less. In this case you may include this
+      gain/attenuatuon into K value and not to waste area for another
+      multiplier. It's a good idea to make option to make this coefficient
+      dynamic, so that the gain is dynamially controlled, gain=K equals 0 dB
+      gain. Typically, variable to variable multiplier costs more area than
+      variable to constant, but an FPGA synthesizer may use DSP/multiplier block
+      for variable to constant multiplication anyway.
 
 ### Rotation ###
 
@@ -55,7 +66,7 @@ Specs:
   * Additional quadrant_i input extents angle range to [0-360) degrees
   * Parameterized fix coefficient (K) bit width
   * Independet output bit width set (output bit width >= input bit width)
-  * Comes along with the Python script (generate_atan_table.py) generating
+  * Comes along with the Python script (atan_generator.py) generating
   arctangent table and K coefficints for given angle bit width and step amount
   * Amount of adders needed (including constant K multiplication partial product
   adders) : <b>TODO: count</b>
@@ -140,7 +151,7 @@ Specs:
   gives [0-360) degrees ouput range
   * Parameterized fix coefficient (K) bit width
   * Takes pre-computed K as a static parameter
-  * Comes along with a Python script (generate_atan_table.py) generating
+  * Comes along with a Python script (atan_generator.py) generating
   arctangent table and K coefficints for given angle bit width and step amount
   * Amount of adders needed (including constant K multiplication partial product
   adders) : <b>TODO: count</b>
@@ -222,7 +233,7 @@ Specs:
   are the angle cordic is about to use.
   * Parameterized fix coefficient (K) bit width
   * Takes pre-computed K as a static parameter
-  * Comes along with a Python script (generate_atan_table.py) generating
+  * Comes along with a Python script (atan_generator.py) generating
   arctangent table and K coefficints for given angle bit width and step amount
   * Amount of adders needed: <b>TODO: count</b>
   * Amount of variable \* variable multipliers needed: 0
