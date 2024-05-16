@@ -44,10 +44,12 @@ Status:
   - [x] Simulation
   - [ ] Hardware run
 
-Sources:
-  - rtl/rotation.sv (top level)
-  - rtl/cordic_step.sv
-  - rtl/sat.sv
+Source files:
+|       file         |  comment  |
+| ------------------ | --------- |
+| rtl/rotation.sv    | top level |
+| rtl/cordic_step.sv |           |
+| rtl/sat.sv         |           |
 
 Basic rotation module. Takes two input values of the same bit width DW ( x_i and y_i )
 and rotates them counter clockwise to some angle also given as an argument and scaled
@@ -123,9 +125,11 @@ Status:
   - [x] Simulation
   - [ ] Hardware run
 
-Sources:
-  - rtl/vectoring.sv (top level)
-  - rtl/cordic_step.sv
+Source files:
+|       file         |  comment  |
+| ------------------ | --------- |
+| rtl/vectoring.sv   | top level |
+| rtl/cordic_step.sv |           |
 
 Receives two values as a vector coordinates and returns vector length and angle
 with x-axis counter clockwise (0-360 degrees).
@@ -214,9 +218,11 @@ Status:
   - [x] Simulation
   - [ ] Hardware run
 
-Sources:
-  - rtl/cordic_step.sv
-  - rtl/sincos.sv (top level)
+Source files:
+|       file         |  comment  |
+| ------------------ | --------- |
+| rtl/sincos.sv      | top level |
+| rtl/cordic_step.sv |           |
 
 Specs:
   * 1 clock 1 data
