@@ -42,16 +42,20 @@ DW        = 18
 AW        = 12 # [0-360) deg
 SINCOS_AW = AW-2 # Internal angle width [0-90) deg
 KW        = SINCOS_AW
+
+CORDIC_PIPELINE = ("none", "even", "all")[1]
+
 K         = calculate_k( N, KW )
 atan      = generate_atan_table( N, SINCOS_AW, "atan.vh" )
 
 f = open( "parameters.v", "w" )
-f.write(f"parameter N         = {N};\n")
-f.write(f"parameter DW        = {DW};\n")
-f.write(f"parameter AW        = {AW};\n")
-f.write(f"parameter SINCOS_AW = {SINCOS_AW};\n")
-f.write(f"parameter KW        = {KW};\n")
-f.write(f"parameter K         = {K};\n")
+f.write(f"parameter N                = {N};\n")
+f.write(f"parameter DW               = {DW};\n")
+f.write(f"parameter AW               = {AW};\n")
+f.write(f'parameter CORDIC_PIPELINE  = "{CORDIC_PIPELINE}";\n')
+f.write(f"parameter SINCOS_AW        = {SINCOS_AW};\n")
+f.write(f"parameter KW               = {KW};\n")
+f.write(f"parameter K                = {K};\n")
 f.close()
 
 RTL_SOURCES = [

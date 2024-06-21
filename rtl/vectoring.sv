@@ -29,21 +29,24 @@
 `include "defines.vh"
 
 module vectoring #(
-  parameter                 N      = 16,
-  parameter                 DW     = 16,
-  parameter                 AW     = DW, // Angle width
-  parameter [N-1:0][AW-1:0] ATAN   = '{default:0},
-  parameter                 KW     = AW,    // fixing coefficient width
-  parameter [KW-1:0]        K      = 39797, // for DW = KW = 16
-  parameter                 REG_EN = 0,
-  parameter                 OW     = DW
+  parameter                 N               = 16,
+  parameter                 DW              = 16,
+  parameter                 AW              = DW, // Angle width
+  parameter [N-1:0][AW-1:0] ATAN            = '{default:0},
+  parameter                 KW              = AW,    // fixing coefficient width
+  parameter [KW-1:0]        K               = 39797, // for DW = KW = 16
+  parameter string          CORDIC_PIPELINE = "none", // "all", "even"
+  parameter                 OUTPUT_REG_EN   = 0,
+  parameter                 OW              = DW
 ) (
   input                        clk_i,
+  input                        valid_i,
   input        signed [DW-1:0] x_i,
   input        signed [DW-1:0] y_i,
   output logic        [OW-1:0] r_o,
   output logic        [AW-1:0] angle_o,
-  output logic           [1:0] quadrant_o
+  output logic           [1:0] quadrant_o,
+  output logic                 valid_o
 );
 
 // synopsys translate_off
@@ -56,12 +59,19 @@ source of data should be constained so that abs(x_i, y_i) <= 2**(DW-1)-1 !");
   end // sim_parameter_check
 // synopsys translate_on
 
+// Let's suppose that nobody will ever generate codric with more than 128 steps..
+localparam [127:0] LONG_EVEN_ONES_VECT = {64{2'b01}};
+localparam [N-1:0] EVEN_ONES_PATTERN = LONG_EVEN_ONES_VECT[N-1:0];
+localparam [N-1:0] REG_EN_VECTOR = CORDIC_PIPELINE=="none" ? '0 : (
+                                   CORDIC_PIPELINE=="all"  ? '1 :  EVEN_ONES_PATTERN);
+
 localparam [AW-1:0] MAX_ANGLE = {AW{1'b1}};
 
+//************************************************************************************
 
 logic signed      [DW-1:0] minus_x;
 logic signed      [DW-1:0] minus_y;
-logic                [1:0] q;
+logic                [1:0] q, q_d;
 logic signed      [DW-1:0] quad_fix_x;
 logic signed      [DW-1:0] quad_fix_y;
 logic signed [N:0]  [DW:0] x;
@@ -108,8 +118,10 @@ generate
         .SHIFT   ( i                ),
         // force it to be unsigned, whatever the form
         .ATAN    ( {1'b0, ATAN[i] } ),
-        .MODE    ( "vectoring"      )
+        .MODE    ( "vectoring"      ),
+        .REG_EN  ( REG_EN_VECTOR[i] )
       ) step (
+        .clk_i   ( clk_i            ),
         .x_i     ( x[i]             ),
         .y_i     ( y[i]             ),
         .a_i     ( angle[i]         ),
@@ -143,13 +155,12 @@ always_comb
   endcase
 
 generate
-  if( REG_EN )
+  if( OUTPUT_REG_EN )
     begin : reg_output
       always_ff @( posedge clk_i )
         begin
           r_o        <= r[DW-1:0];
           angle_o    <= angle_final;
-          quadrant_o <= q;
         end
     end // reg_output
   else
@@ -158,9 +169,43 @@ generate
         begin
           r_o        = r[DW-1:0];
           angle_o    = angle_final;
-          quadrant_o = q;
         end
     end // comb_output
+endgenerate
+
+//*****************************************************************************
+// Valid pipeline
+
+localparam TOTAL_DELAY_CORDIC = CORDIC_PIPELINE=="none" ? 0 : (
+                                CORDIC_PIPELINE=="all"  ? N : (N/2) );
+
+localparam TOTAL_DELAY = TOTAL_DELAY_CORDIC + OUTPUT_REG_EN;
+
+generate
+  case( TOTAL_DELAY )
+    0 :
+      assign
+        valid_o    = valid_i,
+        quadrant_o = q;
+    1 :
+      always_ff @( posedge clk_i )
+        begin
+          valid_o    <= valid_i;
+          quadrant_o <= q;
+        end
+    default :
+      begin : valid_pipeline
+        logic [TOTAL_DELAY-1:0]      valid_d;
+        logic [TOTAL_DELAY-1:0][1:0] q_d;
+        always_ff @( posedge clk_i )
+          begin
+            valid_d <= { valid_d[TOTAL_DELAY-2:0], valid_i };
+            q_d     <= {     q_d[TOTAL_DELAY-2:0],       q };
+          end
+        assign valid_o    = valid_d[TOTAL_DELAY-1];
+        assign quadrant_o =     q_d[TOTAL_DELAY-1];
+      end // valid_pipeline
+  endcase
 endgenerate
 
 endmodule

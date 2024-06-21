@@ -130,16 +130,15 @@ task automatic monitor();
   if( !fa ) $fatal( "can't open one of files with reference data" );
   while( ( !$feof( fr ) && !$feof(fa) && !stop_flag ) )
     begin
-      @( posedge clk );
-      if( input_valid === 1'b1 )
-        begin
-          $fgets( strr, fr );
-          $fgets( stra, fa );
-          if( strr=="" ) break;
-          if( stra=="" ) break;
-          refr = $signed(strr.atoi());
-          refa = $signed(stra.atoi());
-        end
+      $fgets( strr, fr );
+      $fgets( stra, fa );
+      if( strr=="" ) break;
+      if( stra=="" ) break;
+      refr = $signed(strr.atoi());
+      refa = $signed(stra.atoi());
+      do
+        @( posedge clk );
+      while( output_valid !== 1'b1 );
       if( output_valid===1'b1 && check_for_x_states() )
         $fatal( "\n\n\nX-states were found at the output, exiting\n\n\n" );
     end
@@ -209,26 +208,26 @@ initial
 //***************************************************************************
 
 vectoring #(
-  .N             ( N                    ),
-  .DW            ( DW                   ),
-  .AW            ( AW                   ),
-  .ATAN          ( `include "atan.vh"   ),
-  .KW            ( DW                   ),
-  .K             ( K                    ),
-  .REG_EN        ( 1                    )
+  .N               ( N                    ),
+  .DW              ( DW                   ),
+  .AW              ( AW                   ),
+  .ATAN            ( `include "atan.vh"   ),
+  .KW              ( DW                   ),
+  .K               ( K                    ),
+  .CORDIC_PIPELINE ( CORDIC_PIPELINE      ),
+  .OUTPUT_REG_EN   ( 1                    )
 ) DUT (
-  .clk_i         ( clk                  ),
-  .x_i           ( x_i                  ),
-  .y_i           ( y_i                  ),
-  .r_o           ( r                    ),
-  .angle_o       ( angle_inside_quadrant),
-  .quadrant_o    ( quadrant             )
+  .clk_i           ( clk                  ),
+  .valid_i         ( input_valid          ),
+  .x_i             ( x_i                  ),
+  .y_i             ( y_i                  ),
+  .r_o             ( r                    ),
+  .angle_o         ( angle_inside_quadrant),
+  .quadrant_o      ( quadrant             ),
+  .valid_o         ( output_valid         )
 );
 
 assign angle = { quadrant, angle_inside_quadrant };
-
-always_ff @( posedge clk )
-  output_valid <= input_valid;
 
 endmodule
 

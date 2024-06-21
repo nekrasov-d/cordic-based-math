@@ -35,13 +35,16 @@ module sincos #(
   parameter [N-1:0][AW-1:0] ATAN   = '{default:0},
   parameter                 KW     = AW,    // fixing coefficient width
   parameter [KW-1:0]        K      = 39797, // for DW = KW = 16
-  parameter                 REG_EN = 0
+  parameter string          CORDIC_PIPELINE = "none", // "all", "even"
+  parameter                 OUTPUT_REG_EN   = 0
 ) (
   input                        clk_i,
+  input                        valid_i,
   input                  [1:0] quadrant_i,
   input               [AW-1:0] angle_i,
   output logic signed [DW-1:0] sin_o,
-  output logic signed [DW-1:0] cos_o
+  output logic signed [DW-1:0] cos_o,
+  output logic                 valid_o
 );
 
 // synopsys translate_off
@@ -51,9 +54,23 @@ initial
   end // sim_parameter_check
 // synopsys translate_on
 
+// Let's suppose that nobody will ever generate codric with more than 128 steps..
+localparam [127:0] LONG_EVEN_ONES_VECT = {64{2'b01}};
+localparam [N-1:0] EVEN_ONES_PATTERN = LONG_EVEN_ONES_VECT[N-1:0];
+localparam [N-1:0] REG_EN_VECTOR = CORDIC_PIPELINE=="none" ? '0 : (
+                                   CORDIC_PIPELINE=="all"  ? '1 :  EVEN_ONES_PATTERN);
+
+localparam TOTAL_DELAY_CORDIC = CORDIC_PIPELINE=="none" ? 0 : (
+                                CORDIC_PIPELINE=="all"  ? N : (N/2) );
+
+localparam TOTAL_DELAY = TOTAL_DELAY_CORDIC + OUTPUT_REG_EN;
+
+//**************************************************************************************
+
 logic signed [N:0][DW:0] x;
 logic signed [N:0][DW:0] y;
 logic signed [N:0][AW:0] angle;
+logic           [1:0]    quadrant_d;
 logic        [DW-1:0]    x_fix;
 logic        [DW-1:0]    y_fix;
 logic                    x_overflow_safe;
@@ -81,8 +98,10 @@ generate
         .SHIFT   ( i                 ),
         // force it to be unsigned, whatever the form
         .ATAN    ( { 1'b0, ATAN[i] } ),
-        .MODE    ( "rotation"        )
+        .MODE    ( "rotation"        ),
+        .REG_EN  ( REG_EN_VECTOR[i]  )
       ) step (
+        .clk_i   ( clk_i             ),
         .y_i     ( y[i]              ),
         .x_i     ( x[i]              ),
         .a_i     ( angle[i]          ),
@@ -91,6 +110,23 @@ generate
         .y_o     ( y[i+1]            )
       );
     end // gen_rotators
+endgenerate
+
+generate
+  case( TOTAL_DELAY_CORDIC )
+    0 :
+      assign quadrant_d = quadrant_i;
+    1 :
+      always_ff @( posedge clk_i )
+        quadrant_d <= quadrant_i;
+    default :
+      begin : q_pipeline
+        logic [TOTAL_DELAY_CORDIC-1:0][1:0] q_d;
+        always_ff @( posedge clk_i )
+          q_d <= { q_d[TOTAL_DELAY_CORDIC-2:0], quadrant_i };
+        assign quadrant_d = q_d[TOTAL_DELAY_CORDIC-1];
+      end // q_pipeline
+  endcase
 endgenerate
 
 // Cordic works inside the first quadrant, so the values are supposed to be
@@ -126,7 +162,7 @@ assign minus_sin = ~sin + `u(1'b1); // Probably overflow safe thing
 assign minus_cos = ~cos + `u(1'b1); // would be needed here too...
 
 always_comb
-  case( quadrant_i )
+  case( quadrant_d )
     2'd0 : sin_quad_fix =       sin;
     2'd1 : sin_quad_fix =       cos;
     2'd2 : sin_quad_fix = minus_sin;
@@ -134,7 +170,7 @@ always_comb
   endcase
 
 always_comb
-  case( quadrant_i )
+  case( quadrant_d )
     2'd0 : cos_quad_fix =       cos;
     2'd1 : cos_quad_fix = minus_sin;
     2'd2 : cos_quad_fix = minus_cos;
@@ -142,7 +178,7 @@ always_comb
   endcase
 
 generate
-  if( REG_EN )
+  if( OUTPUT_REG_EN )
     begin : reg_output
       always_ff @( posedge clk_i )
         begin
@@ -158,6 +194,26 @@ generate
           cos_o = cos_quad_fix;
         end
     end // comb_output
+endgenerate
+
+//*****************************************************************************
+// Valid pipeline
+
+generate
+  case( TOTAL_DELAY )
+    0 :
+      assign valid_o = valid_i;
+    1 :
+      always_ff @( posedge clk_i )
+          valid_o <= valid_i;
+    default :
+      begin : valid_pipeline
+        logic [TOTAL_DELAY-1:0] valid_d;
+        always_ff @( posedge clk_i )
+          valid_d <= { valid_d[TOTAL_DELAY-2:0], valid_i };
+        assign valid_o    = valid_d[TOTAL_DELAY-1];
+      end // valid_pipeline
+  endcase
 endgenerate
 
 endmodule

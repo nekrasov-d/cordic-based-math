@@ -36,14 +36,16 @@ module cordic_step #(
   parameter          AW    = 0,
   parameter          SHIFT = 0,
   parameter [AW-1:0] ATAN  = 0,
-  parameter          MODE  = "rotation" // "vectoring"
+  parameter          MODE  = "rotation", // "vectoring",
+  parameter          REG_EN = 0
 ) (
-  input  signed [DW-1:0] x_i,
-  input  signed [DW-1:0] y_i,
-  input  signed [AW-1:0] a_i,
-  output signed [AW-1:0] a_o,
-  output signed [DW-1:0] x_o,
-  output signed [DW-1:0] y_o
+  input                        clk_i,
+  input        signed [DW-1:0] x_i,
+  input        signed [DW-1:0] y_i,
+  input        signed [AW-1:0] a_i,
+  output logic signed [AW-1:0] a_o,
+  output logic signed [DW-1:0] x_o,
+  output logic signed [DW-1:0] y_o
 );
 
 logic signed [DW-1:0] x_shift;
@@ -55,15 +57,37 @@ assign y_shift = y_i >>> SHIFT;
 generate
   if( MODE=="rotation" )
     begin : rotation_mode
-      assign x_o = `sign(a_i) ? x_i + y_shift : x_i - y_shift;
-      assign y_o = `sign(a_i) ? y_i - x_shift : y_i + x_shift;
-      assign a_o = `sign(a_i) ? a_i + ATAN    : a_i - ATAN;
+      if( REG_EN )
+        always_ff @( posedge clk_i )
+          begin
+            x_o <= `sign(a_i) ? x_i + y_shift : x_i - y_shift;
+            y_o <= `sign(a_i) ? y_i - x_shift : y_i + x_shift;
+            a_o <= `sign(a_i) ? a_i + ATAN    : a_i - ATAN;
+          end
+      else
+        always_comb
+          begin
+            x_o = `sign(a_i) ? x_i + y_shift : x_i - y_shift;
+            y_o = `sign(a_i) ? y_i - x_shift : y_i + x_shift;
+            a_o = `sign(a_i) ? a_i + ATAN    : a_i - ATAN;
+          end
     end // rotation_mode
   else
     begin : vectoring_mode
-      assign x_o = `sign(y_i) ? x_i - y_shift : x_i + y_shift;
-      assign y_o = `sign(y_i) ? y_i + x_shift : y_i - x_shift;
-      assign a_o = `sign(y_i) ? a_i + ATAN    : a_i - ATAN;
+      if( REG_EN )
+        always_ff @( posedge clk_i )
+          begin
+            x_o <= `sign(y_i) ? x_i - y_shift : x_i + y_shift;
+            y_o <= `sign(y_i) ? y_i + x_shift : y_i - x_shift;
+            a_o <= `sign(y_i) ? a_i + ATAN    : a_i - ATAN;
+          end
+      else
+        always_comb
+          begin
+            x_o = `sign(y_i) ? x_i - y_shift : x_i + y_shift;
+            y_o = `sign(y_i) ? y_i + x_shift : y_i - x_shift;
+            a_o = `sign(y_i) ? a_i + ATAN    : a_i - ATAN;
+          end
     end // vectoring_mode
 endgenerate
 

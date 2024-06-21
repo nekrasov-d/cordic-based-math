@@ -74,6 +74,10 @@ Specs:
   adders) : <b>TODO: count</b>
   * Amount of variable \* variable multipliers needed: 0
   * Amount of block RAM needed: 0 bit
+  * Codric core computations can be pipelined. Options:
+    - No registers
+    - Even atoms only
+    - All atoms
 
 #### Overflow protection ####
 
@@ -161,6 +165,10 @@ Specs:
   adders) : <b>TODO: count</b>
   * Amount of variable \* variable multipliers needed: 0
   * Amount of block RAM needed: 0 bit
+  * Codric core computations can be pipelined. Options:
+    - No registers
+    - Even atoms only
+    - All atoms
 
 ### Increasing angle precision ###
 
@@ -244,6 +252,10 @@ Specs:
   * Amount of adders needed: <b>TODO: count</b>
   * Amount of variable \* variable multipliers needed: 0
   * Amount of block RAM needed: 0 bit
+  * Codric core computations can be pipelined. Options:
+    - No registers
+    - Even atoms only
+    - All atoms
 
 #### Internal bit width and output bit width ####
 

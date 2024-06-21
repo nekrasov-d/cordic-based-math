@@ -53,19 +53,20 @@ initial
    end // main
 
 sincos #(
-  .N             ( N                    ),
-  .DW            ( DW                   ),
-  .AW            ( SINCOS_AW            ),
-  .ATAN          ( `include "atan.vh"   ),
-  .KW            ( DW                   ),
-  .K             ( K                    ),
-  .REG_EN        ( 1                    )
+  .N               ( N                    ),
+  .DW              ( DW                   ),
+  .AW              ( SINCOS_AW            ),
+  .ATAN            ( `include "atan.vh"   ),
+  .KW              ( DW                   ),
+  .K               ( K                    ),
+  .CORDIC_PIPELINE ( CORDIC_PIPELINE      ),
+  .OUTPUT_REG_EN   ( 1                    )
 ) DUT (
-  .clk_i         ( clk                  ),
-  .quadrant_i    ( counter[AW-1:AW-2]   ),
-  .angle_i       ( counter[AW-3:0]      ),
-  .sin_o         (                      ),
-  .cos_o         (                      )
+  .clk_i           ( clk                  ),
+  .quadrant_i      ( counter[AW-1:AW-2]   ),
+  .angle_i         ( counter[AW-3:0]      ),
+  .sin_o           (                      ),
+  .cos_o           (                      )
 );
 
 endmodule

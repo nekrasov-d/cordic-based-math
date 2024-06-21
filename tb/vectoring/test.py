@@ -45,17 +45,18 @@ from vectoring        import vectoring_int_model
 # Test parameters (example)
 
 # Mandatory parameters
-N              = 16
-DW             = 16
-AW             = DW
-KW             = AW
-K              = calculate_k( N, KW )
-CLK_PER_SAMPLE = 1
-TESTBENCH_MODE = ( "manual", "automatic" )[1]
-INPUT_X_FNAME  = "input_x.txt"
-INPUT_Y_FNAME  = "input_y.txt"
-REF_R_FNAME    = "ref_r.txt"
-REF_A_FNAME    = "ref_a.txt"
+N               = 16
+DW              = 16
+AW              = DW
+KW              = AW
+K               = calculate_k( N, KW )
+CORDIC_PIPELINE = ("none", "even", "all")[1]
+CLK_PER_SAMPLE  = 1
+TESTBENCH_MODE  = ( "manual", "automatic" )[1]
+INPUT_X_FNAME   = "input_x.txt"
+INPUT_Y_FNAME   = "input_y.txt"
+REF_R_FNAME     = "ref_r.txt"
+REF_A_FNAME     = "ref_a.txt"
 
 # Could be static if project has fixed RTL files set
 RTL_SOURCES = [
@@ -67,17 +68,18 @@ RTL_SOURCES = [
 # Translate config to verilog
 
 f = open( "parameters.v", "w" )
-f.write(f"parameter N              = {N};\n")
-f.write(f"parameter DW             = {DW};\n")
-f.write(f"parameter AW             = {AW};\n")
-f.write(f"parameter KW             = {KW};\n")
-f.write(f"parameter K              = {K};\n")
-f.write(f'parameter CLK_PER_SAMPLE = {CLK_PER_SAMPLE};\n')
-f.write(f'parameter INPUT_X_FNAME  = "{INPUT_X_FNAME}";\n')
-f.write(f'parameter INPUT_Y_FNAME  = "{INPUT_Y_FNAME}";\n')
-f.write(f'parameter REF_R_FNAME    = "{REF_R_FNAME}";\n')
-f.write(f'parameter REF_A_FNAME    = "{REF_A_FNAME}";\n')
-f.write(f'parameter TESTBENCH_MODE = "{TESTBENCH_MODE}";\n')
+f.write(f"parameter N                = {N};\n")
+f.write(f"parameter DW               = {DW};\n")
+f.write(f"parameter AW               = {AW};\n")
+f.write(f"parameter KW               = {KW};\n")
+f.write(f"parameter K                = {K};\n")
+f.write(f'parameter CLK_PER_SAMPLE   = {CLK_PER_SAMPLE};\n')
+f.write(f'parameter CORDIC_PIPELINE  = "{CORDIC_PIPELINE}";\n')
+f.write(f'parameter INPUT_X_FNAME    = "{INPUT_X_FNAME}";\n')
+f.write(f'parameter INPUT_Y_FNAME    = "{INPUT_Y_FNAME}";\n')
+f.write(f'parameter REF_R_FNAME      = "{REF_R_FNAME}";\n')
+f.write(f'parameter REF_A_FNAME      = "{REF_A_FNAME}";\n')
+f.write(f'parameter TESTBENCH_MODE   = "{TESTBENCH_MODE}";\n')
 f.close()
 
 f = open( "files", "w" )
@@ -88,7 +90,7 @@ f.close()
 ############################################################################
 # Prepare test data
 
-NVALS = 100
+NVALS = 10000
 atan = generate_atan_table( N, AW, "atan.vh" )
 rng = np.random.default_rng()
 

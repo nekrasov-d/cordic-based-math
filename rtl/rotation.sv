@@ -91,6 +91,7 @@ generate
         .ATAN    ( { 1'b0, ATAN[i] } ),
         .MODE    ( "rotation"        )
       ) step (
+        .clk_i   ( clk_i             ),
         .y_i     ( y[i]              ),
         .x_i     ( x[i]              ),
         .a_i     ( angle[i]          ),
